@@ -7,6 +7,24 @@ loadrt hal_parport cfg="0 out"
 setp parport.0.reset-time 5000
 loadrt stepgen step_type=0,0,0
 
+# debounce
+loadrt debounce cfg=1,1,1
+addf debounce.0 base-thread
+addf debounce.1 base-thread
+addf debounce.2 base-thread
+setp debounce.0.delay 20
+setp debounce.1.delay 20
+setp debounce.2.delay 20
+net raw-both-home-x <= parport.0.pin-10-in-not
+net raw-both-home-y <= parport.0.pin-11-in-not
+net raw-both-home-z <= parport.0.pin-12-in-not
+net raw-both-home-x => debounce.0.0.in
+net raw-both-home-y => debounce.1.0.in
+net raw-both-home-z => debounce.2.0.in
+net both-home-x <= debounce.0.0.out
+net both-home-y <= debounce.1.0.out
+net both-home-z <= debounce.2.0.out
+ 
 addf parport.0.read base-thread
 addf stepgen.make-pulses base-thread
 addf parport.0.write base-thread
@@ -27,9 +45,9 @@ net zdir            => parport.0.pin-08-out
 net xdir            => parport.0.pin-14-out
 net ystep           => parport.0.pin-16-out
 setp parport.0.pin-16-out-reset 1
-net both-home-x     <= parport.0.pin-10-in-not
-net both-home-y     <= parport.0.pin-11-in-not
-net both-home-z     <= parport.0.pin-12-in-not
+#net both-home-x     <= parport.0.pin-10-in-not
+#net both-home-y     <= parport.0.pin-11-in-not
+#net both-home-z     <= parport.0.pin-12-in-not
 
 setp stepgen.0.position-scale [JOINT_0]SCALE
 setp stepgen.0.steplen 1

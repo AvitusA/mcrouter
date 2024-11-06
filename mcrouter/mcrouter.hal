@@ -7,6 +7,44 @@ loadrt hal_parport cfg="0 out"
 setp parport.0.reset-time 5000
 loadrt stepgen step_type=0,0,0
 
+loadrt encoder names=step_increment
+addf encoder.update-counters servo-thread
+addf encoder.capture-position servo-thread
+setp step_increment.counter-mode 1
+
+loadrt wcomp names=step_increment_counter_should_reset
+addf step_increment_counter_should_reset servo-thread
+setp step_increment_counter_should_reset.min 3.5
+setp step_increment_counter_should_reset.max 4.5
+
+loadrt conv_s32_float names=step_increment_float
+addf step_increment_float servo-thread
+net reset-in_s32 step_increment.counts => step_increment_float.in
+net reset-in step_increment_float.out => step_increment_counter_should_reset.in
+net reset-out step_increment_counter_should_reset.out => step_increment.reset
+
+loadrt conv_s32_u32 names=increment_counter_u32
+addf increment_counter_u32 servo-thread
+net reset-in_s32 => increment_counter_u32.in
+
+loadrt bitslice names=increment_counter_bits personality=2
+addf increment_counter_bits servo-thread
+net increment_counter_bits_in increment_counter_u32.out => increment_counter_bits.in
+
+loadrt mux4 names=increment_mux
+addf increment_mux servo-thread
+setp increment_mux.in0 5
+setp increment_mux.in1 1
+setp increment_mux.in2 0.1
+setp increment_mux.in3 0.01
+net increment_mux_bit0 increment_counter_bits.out-00 => increment_mux.sel0
+net increment_mux_bit1 increment_counter_bits.out-01 => increment_mux.sel1
+net jog-increment  <= increment_mux.out
+net jog-increment => halui.axis.x.increment
+net jog-increment => halui.axis.y.increment
+net jog-increment => halui.axis.z.increment
+setp halui.axis.jog-speed 100
+
 
 # debounce
 loadrt debounce cfg=1,1,1

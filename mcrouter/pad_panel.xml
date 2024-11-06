@@ -1,0 +1,7 @@
+<pyvcp>
+	<label text="Gamepad Jog Increment"/>
+	<number>
+		<halpin>"ui-increment"</halpin>
+		<format>"4.2f mm"</format>
+	</number>
+</pyvcp>

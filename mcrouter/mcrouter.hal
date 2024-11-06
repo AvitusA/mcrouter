@@ -7,14 +7,15 @@ loadrt hal_parport cfg="0 out"
 setp parport.0.reset-time 5000
 loadrt stepgen step_type=0,0,0
 
+
 # debounce
 loadrt debounce cfg=1,1,1
 addf debounce.0 base-thread
 addf debounce.1 base-thread
 addf debounce.2 base-thread
-setp debounce.0.delay 20
-setp debounce.1.delay 20
-setp debounce.2.delay 20
+setp debounce.0.delay 15
+setp debounce.1.delay 15
+setp debounce.2.delay 15
 net raw-both-home-x <= parport.0.pin-10-in-not
 net raw-both-home-y <= parport.0.pin-11-in-not
 net raw-both-home-z <= parport.0.pin-12-in-not
@@ -45,9 +46,6 @@ net zdir            => parport.0.pin-08-out
 net xdir            => parport.0.pin-14-out
 net ystep           => parport.0.pin-16-out
 setp parport.0.pin-16-out-reset 1
-#net both-home-x     <= parport.0.pin-10-in-not
-#net both-home-y     <= parport.0.pin-11-in-not
-#net both-home-z     <= parport.0.pin-12-in-not
 
 setp stepgen.0.position-scale [JOINT_0]SCALE
 setp stepgen.0.steplen 1
@@ -102,3 +100,29 @@ net tool-change iocontrol.0.tool-change => hal_manualtoolchange.change
 net tool-changed iocontrol.0.tool-changed <= hal_manualtoolchange.changed
 net tool-number iocontrol.0.tool-prep-number => hal_manualtoolchange.number
 net tool-prepare-loopback iocontrol.0.tool-prepare => iocontrol.0.tool-prepared
+
+# Gamepad
+loadusr -W hal_input -KRAL X-Box
+# Left joystick jogs X/Y
+net left-joy-x input.0.abs-x-position => halui.axis.x.analog
+net left-joy-y input.0.abs-y-position => halui.axis.y.analog 
+# Right joystick jogs Z
+net right-joy-y input.0.abs-ry-position => halui.axis.z.analog
+
+# TODO: 'halui.jog-deadband' (float, in) - deadband for analog jogging (smaller jogging speed requests are not performed)
+
+# TODO
+#- Increment jog (X, Y, Z) - Crosshair (XY), Left triggers (Z)
+#	halui.jog.<n>.increment-minus (bit, in)
+#	halui.jog.<n>.increment-plus (bit, in)
+#- Increment size toggle - Mode button
+#        halui.jog.<n>.increment' (float,in) - pin for setting the jog increment for axis <n> when using increment-minus or increment-plus to jog.
+#	TODO: What to do with float
+#- Home: Back button -
+net btn-back input.0.btn-select => halui.home-all
+
+#- Touch off (X, Y, Z): X, Y, B buttons
+net btn-x input.0.btn-x => halui.mdi-command-00 
+net btn-y input.0.btn-y => halui.mdi-command-01 
+net btn-b input.0.btn-b => halui.mdi-command-02
+#- Later: Z-probe (A button)
